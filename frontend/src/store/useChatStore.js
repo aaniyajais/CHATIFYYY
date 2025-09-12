@@ -14,9 +14,12 @@ export const useChatStore = create((set, get) => ({
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/users");
-      set({ users: res.data });
+      set({ users: res.data || [] });
     } catch (error) {
-      toast.error(error.response.data.message);
+      console.error("Error fetching users:", error);
+      const errorMessage = error.response?.data?.message || error.message || "Failed to fetch users";
+      toast.error(errorMessage);
+      set({ users: [] }); // Ensure users is always an array
     } finally {
       set({ isUsersLoading: false });
     }
@@ -26,9 +29,12 @@ export const useChatStore = create((set, get) => ({
     set({ isMessagesLoading: true });
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
-      set({ messages: res.data });
+      set({ messages: res.data || [] });
     } catch (error) {
-      toast.error(error.response.data.message);
+      console.error("Error fetching messages:", error);
+      const errorMessage = error.response?.data?.message || error.message || "Failed to fetch messages";
+      toast.error(errorMessage);
+      set({ messages: [] }); // Ensure messages is always an array
     } finally {
       set({ isMessagesLoading: false });
     }
@@ -37,9 +43,11 @@ export const useChatStore = create((set, get) => ({
     const { selectedUser, messages } = get();
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-      set({ messages: [...messages, res.data] });
+      set({ messages: [...(messages || []), res.data] });
     } catch (error) {
-      toast.error(error.response.data.message);
+      console.error("Error sending message:", error);
+      const errorMessage = error.response?.data?.message || error.message || "Failed to send message";
+      toast.error(errorMessage);
     }
   },
 
@@ -54,7 +62,7 @@ export const useChatStore = create((set, get) => ({
       if (!isMessageSentFromSelectedUser) return;
 
       set({
-        messages: [...get().messages, newMessage],
+        messages: [...(get().messages || []), newMessage],
       });
     });
   },
