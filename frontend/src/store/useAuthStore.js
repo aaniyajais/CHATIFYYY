@@ -3,7 +3,7 @@ import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const BASE_URL = import.meta.env.MODE === "development" ? "https://chatifyyy-backend.onrender.com" : "/";
+const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -22,7 +22,7 @@ export const useAuthStore = create((set, get) => ({
       get().connectSocket();
     } catch (error) {
       console.log("Error in checkAuth:", error);
-      set({ authUser: null });
+      set({ authUser: null, onlineUsers: [] }); // Ensure onlineUsers is reset
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -90,19 +90,29 @@ export const useAuthStore = create((set, get) => ({
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
 
-    const socket = io(BASE_URL, {
-      query: {
-        userId: authUser._id,
-      },
-    });
-    socket.connect();
+    try {
+      const socket = io(BASE_URL, {
+        query: {
+          userId: authUser._id,
+        },
+      });
+      socket.connect();
 
-    set({ socket: socket });
+      set({ socket: socket });
 
-    socket.on("getOnlineUsers", (userIds) => {
-     
-      set({ onlineUsers: userIds || [] });
-    });
+      socket.on("getOnlineUsers", (userIds) => {
+        console.log("Received onlineUsers:", userIds);
+        set({ onlineUsers: Array.isArray(userIds) ? userIds : [] });
+      });
+
+      socket.on("connect_error", (error) => {
+        console.error("Socket connection error:", error);
+        set({ onlineUsers: [] });
+      });
+    } catch (error) {
+      console.error("Error connecting socket:", error);
+      set({ onlineUsers: [] });
+    }
   },
   disconnectSocket: () => {
     if (get().socket?.connected) get().socket.disconnect();
