@@ -5,10 +5,11 @@ import express from "express";
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server, {
+
+  const io = new Server(server, {
   cors: {
     origin: ["https://chatifyyy-frontend.onrender.com"],
-     credentials: true,
+    credentials: true,
   },
 });
 
