@@ -20,12 +20,14 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 
-  app.use(
+ 
+app.use(
   cors({
-    origin: "https://chatifyyy-frontend.onrender.com",
+    origin: process.env.NODE_ENV === "development" ? "https://chatifyyy-frontend.onrender.com" : true,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   })
-
 );
 
 app.use("/api/auth", authRoutes);
